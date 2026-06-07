@@ -11,6 +11,7 @@ def render_evaluation_ui(metrics: dict, source_word_count: int, summary_word_cou
     summary_reading_time = summary_word_count / 200
     time_saved_mins = max(0.0, source_reading_time - summary_reading_time)
     
+
     st.subheader("Performance Summary")
     
     col1, col2 = st.columns(2)
@@ -28,3 +29,30 @@ def render_evaluation_ui(metrics: dict, source_word_count: int, summary_word_cou
         )
 
    
+    with st.expander("⚙️ System Telemetry & Profiling"):
+        st.markdown("#### Context Window Utilization")
+        
+        total_tokens = metrics.get('total_tokens', 0)
+        context_window = metrics.get('context_window', 131072)
+        utilization = min(1.0, total_tokens / context_window) if context_window > 0 else 0.0
+        
+        # Color gradient based on utilization
+        color = "#28a745" # Green
+        if utilization > 0.8:
+            color = "#dc3545" # Red
+        elif utilization > 0.6:
+            color = "#ffc107" # Yellow
+            
+        st.markdown(
+            f"""
+            <div style="width: 100%; background-color: #333; border-radius: 5px; margin-bottom: 5px;">
+              <div style="width: {max(utilization * 100, 1):.1f}%; background-color: {color}; height: 18px; border-radius: 5px;"></div>
+            </div>
+            <p style="text-align: right; font-size: 0.85em; color: #a0a0a0; margin-top: 0px;">
+              {total_tokens:,} / {context_window:,} tokens ({utilization * 100:.1f}%)
+            </p>
+            """,
+            unsafe_allow_html=True
+        )
+        
+       
