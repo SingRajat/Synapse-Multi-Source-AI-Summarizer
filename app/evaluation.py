@@ -1,9 +1,7 @@
 import streamlit as st
 
 def render_evaluation_ui(metrics: dict, source_word_count: int, summary_word_count: int):
-    """
-    Renders the Streamlit Evaluation UI (Dual-Layer: Executive Summary & Telemetry Expander).
-    """
+ 
     st.markdown("---")
     
     # assuming 200 words per minute reading speed
