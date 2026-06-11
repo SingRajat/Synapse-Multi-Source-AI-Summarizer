@@ -32,14 +32,16 @@ async def async_map_summaries(chunks, llm, semaphore_limit=5):
     return summaries, input_tokens, output_tokens
 
 
-def refine_summaries(summaries: list[str],llm, on_token=None):
-    from app.prompts import  refine_prompt
+def refine_summaries(summaries: list[str],llm, mode="Detailed", on_token=None):
+    from app.prompts import  refine_prompts
+
+    refine_prompt=refine_prompts.format.get(mode, refine_prompts["Detailed"])
 
     refined=summaries[0] 
     input_tokens = 0
     output_tokens = 0
     for i,summary in enumerate(summaries[1:]):
-        prompt_text= refine_prompt.format(
+        prompt_text= refine_prompts.format(
             existing_summary=refined,
             new_summary=summary
         )
@@ -69,7 +71,7 @@ def refine_summaries(summaries: list[str],llm, on_token=None):
         
     return refined, input_tokens, output_tokens
 
-def generate_summary(docs: list[Document], api_key:str, on_token=None)->tuple[str, dict]:
+def generate_summary(docs: list[Document], api_key:str, mode="Detailed", on_token=None)->tuple[str, dict]:
     from app.llm import get_llm
     
     metrics = {
@@ -87,6 +89,7 @@ def generate_summary(docs: list[Document], api_key:str, on_token=None)->tuple[st
     
     t0 = time.time()
     chunks=split_docs(docs)
+    
     metrics["chunk_latency"] = round(time.time() - t0, 4)
     metrics["chunk_count"] = len(chunks)
 
@@ -103,9 +106,10 @@ def generate_summary(docs: list[Document], api_key:str, on_token=None)->tuple[st
         return summaries[0], metrics
     
     t2 = time.time()
-    final_summary, reduce_in, reduce_out = refine_summaries(summaries,llm,on_token=on_token)
+    final_summary, reduce_in, reduce_out = refine_summaries(summaries,llm,mode=mode,on_token=on_token)
     metrics["reduce_latency"] = round(time.time() - t2, 4)
     metrics["reduce_input_tokens"] = reduce_in
     metrics["reduce_output_tokens"] = reduce_out
-    
+
+
     return final_summary, metrics
